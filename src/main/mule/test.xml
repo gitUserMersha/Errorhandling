@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+  xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+  xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+  <http:listener-config name="HTTP_Listener_config-experience" doc:name="HTTP Listener config" doc:id="70d1b5b1-086c-461a-9266-56295190eefa" >
+    <http:listener-connection host="0.0.0.0" port="8081" />
+  </http:listener-config>
+  <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="ce3c4c96-a4f8-42cb-950e-83f3200519d0" >
+    <http:request-connection host="practice-sys-api.us-e2.cloudhub.io"/>
+  </http:request-config>
+  <http:listener-config name="HTTP_Listener_config-system" doc:name="HTTP Listener config" doc:id="6c1ddf46-d884-402f-8822-2ec46ac62581" >
+    <http:listener-connection host="0.0.0.0" port="8082" />
+  </http:listener-config>
+  <configuration-properties doc:name="Configuration properties" doc:id="6a98a3d8-6986-44e1-9260-a46c9177ef7b" file="db.properties" />
+  <flow name="experience-API" doc:id="24dff2b3-46a5-4f05-9c54-adff8bf45799" >
+    <http:listener doc:name="Listener" doc:id="6b902f7e-18d3-4c2b-8bb3-42537342c0d0" config-ref="HTTP_Listener_config-experience" path="/test2" allowedMethods="POST"/>
+    <ee:transform doc:name="Transform Message" doc:id="b23d0fa5-cd8b-4b81-b27e-5471a929a3c5" >
+      <ee:message >
+        <ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+      </ee:message>
+      <ee:variables >
+        <ee:set-variable variableName="varArray" ><![CDATA[%dw 2.0
+output application/json
+---
+[] as Array]]></ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+    <flow-ref doc:name="Flow Reference" doc:id="0cc74e01-23f9-4a6f-aab3-0f2926e52a68" name="common_Flow" />
+  </flow>
+  <flow name="testproject-2Flow" doc:id="a1ac9f0d-b4a4-451f-bac4-6528a14e2781" >
+    <ee:transform doc:name="Transform Message" doc:id="c8d31c4e-1680-4d24-b4b9-8b7ae538cada" >
+      <ee:message >
+        <ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+      </ee:message>
+      <ee:variables >
+        <ee:set-variable variableName="varArray" ><![CDATA[%dw 2.0
+output application/json
+---
+[] as Array]]></ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+    <flow-ref doc:name="Flow Reference" doc:id="38f0d869-0a75-4c30-a828-91b8990c7fb8" name="common_Flow"/>
+  </flow>
+  <sub-flow name="common_Flow" doc:id="cbcc7427-9148-4561-88fe-8cd667384cbd">
+  <choice doc:name="Choice" doc:id="3bec1712-4445-4e61-8cf7-a746c9f63b4f" >
+      <when expression='#[payload.firstname=="Estif"]'>
+        <http:request method="POST" doc:name="Request" doc:id="ca3fc834-8205-4b04-a75c-12439f5a0c63" config-ref="HTTP_Request_configuration" path="/test">
+      <http:headers><![CDATA[#[output application/java
+---
+{
+  "Accept" : "application/json",
+"Content-Type" : "application/json"
+}]]]></http:headers>
+    </http:request>
+      </when>
+      <otherwise >
+        <foreach doc:name="For Each" doc:id="b68aa781-ba21-490a-917b-a579bd2f673c" collection="#[payload]">
+          <ee:transform doc:name="Transform Message" doc:id="82f468b1-c8ba-4d70-af74-ecfd49be75cd">
+          <ee:message>
+            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ 
+     "PassportNumber":"EP-"++ payload.id ++ "-000",
+   "FirstName":payload.name,
+   "Email":payload.email,
+   "Gender": if (payload.gender =="male") "M" else if(payload.gender == "female")  "F" else "Invalid",
+   "Status":payload.status
+  
+}]]></ee:set-payload>
+          </ee:message>
+        </ee:transform>
+          <ee:transform doc:name="Transform Message" doc:id="0cbcbc1d-9aa4-4fa7-b5a8-9dbb4c54f70f" >
+            <ee:message >
+            </ee:message>
+            <ee:variables >
+              <ee:set-variable variableName="varArray" ><![CDATA[%dw 2.0
+output application/json
+---
+[payload] ++ vars.varArray]]></ee:set-variable>
+            </ee:variables>
+          </ee:transform>
+        </foreach>
+				<ee:transform doc:name="Transform Message" doc:id="4736b8ad-8df1-4386-9191-cc8e71da5b04">
+      <ee:message>
+        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.varArray]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
+      </otherwise>
+    </choice>
+  </sub-flow>
+</mule>

@@ -1,0 +1,35 @@
+#%RAML 1.0
+---
+title: e-BookMobile API
+baseUri: http://api.e-bookmobile.com/{version}
+version: v1
+/users:
+  /books:
+   get:
+    queryParameters:
+      author:
+    responses:
+        200:
+          body:
+            application/json:
+              example: !include /examples/source-file.json 
+   
+   post:
+     queryParameters:
+      author:
+          required: false
+     responses:
+        200:
+          body:
+            application/json:
+              example: !include /examples/source-file.json 
+  /authors:
+   get:
+    queryParameters:
+      author:
+          required: false
+      access_token:
+          required: true    
+    body:
+     application/json:
+      example: !include /examples/authorsData.json
